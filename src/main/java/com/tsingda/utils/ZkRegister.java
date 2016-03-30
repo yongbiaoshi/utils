@@ -1,6 +1,7 @@
 package com.tsingda.utils;
 
 import org.apache.curator.framework.CuratorFramework;
+import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.data.Stat;
 import org.springframework.util.Assert;
 
@@ -26,7 +27,7 @@ public class ZkRegister {
         if(stat != null){
             ZkClientUtils.deleteNode(client, path);
         }
-        ZkClientUtils.createNode(client, path, connectionStr.getBytes());
+        ZkClientUtils.createNode(client, path, CreateMode.EPHEMERAL, connectionStr.getBytes(), null);
     }
 
     public String getZkConnectString() {

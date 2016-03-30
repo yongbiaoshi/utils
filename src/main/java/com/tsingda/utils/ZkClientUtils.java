@@ -38,21 +38,21 @@ public class ZkClientUtils {
             client.close();
         }
     }
-    
+
     public static Stat checkExists(CuratorFramework client, String path) throws Exception {
         return client.checkExists().forPath(path);
     }
 
-    public static void createNode(CuratorFramework client, String path, byte[] data) throws Exception {
-        client.create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL).withACL(Ids.OPEN_ACL_UNSAFE)
-                .forPath(path, data);
+    public static String createNode(CuratorFramework client, String path, CreateMode mode, byte[] data,
+            BackgroundCallback callback) throws Exception {
+        String result = null;
+        if (callback == null) {
+            result = client.create().creatingParentsIfNeeded().withMode(mode).withACL(Ids.OPEN_ACL_UNSAFE).forPath(path, data);
+        }else{
+            result = client.create().creatingParentsIfNeeded().withMode(mode).withACL(Ids.OPEN_ACL_UNSAFE).inBackground(callback).forPath(path, data);
+        }
         LOGGER.info("创建Node Path：{}， Data：{}", path, data);
-    }
-
-    public static void createNode(CuratorFramework client, String path, byte[] data, BackgroundCallback callback)
-            throws Exception {
-        client.create().creatingParentsIfNeeded().withMode(CreateMode.PERSISTENT).withACL(Ids.OPEN_ACL_UNSAFE)
-                .inBackground(callback).forPath(path, data);
+        return result;
     }
 
     public static void deleteNode(CuratorFramework client, String path) throws Exception {
@@ -90,8 +90,8 @@ public class ZkClientUtils {
         client.setData().withVersion(version).forPath(path, data);
     }
 
-    public static void updateNode(CuratorFramework client, String path, byte[] data, int version, BackgroundCallback callback)
-            throws Exception {
+    public static void updateNode(CuratorFramework client, String path, byte[] data, int version,
+            BackgroundCallback callback) throws Exception {
         client.setData().withVersion(version).inBackground(callback).forPath(path, data);
     }
 
@@ -108,12 +108,13 @@ public class ZkClientUtils {
         nodeCache.getListenable().addListener(listener);
     }
 
-    public static void addChildrenWatcher(CuratorFramework client, String path, PathChildrenCacheListener listener)
+    public static PathChildrenCache addChildrenWatcher(CuratorFramework client, String path, PathChildrenCacheListener listener)
             throws Exception {
         @SuppressWarnings("resource")
         final PathChildrenCache cache = new PathChildrenCache(client, path, true);
         cache.start(StartMode.NORMAL);
         cache.getListenable().addListener(listener);
+        return cache;
     }
 
 }
